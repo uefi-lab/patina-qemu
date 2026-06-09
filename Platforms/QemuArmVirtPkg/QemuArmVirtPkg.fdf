@@ -324,7 +324,9 @@ READ_LOCK_STATUS   = TRUE
   # ACPI Support
   #
   INF MdeModulePkg/Universal/Acpi/BootGraphicsResourceTableDxe/BootGraphicsResourceTableDxe.inf
+  INF MdeModulePkg/Universal/Acpi/AcpiPlatformDxe/AcpiPlatformDxe.inf
   INF QemuPkg/AcpiPlatformDxe/AcpiPlatformDxe.inf
+  INF QemuPkg/AcpiSdtDxe/AcpiSdtDxe.inf
 
   #
   # Standalone MM drivers in non-secure world
@@ -605,8 +607,8 @@ READ_LOCK_STATUS   = TRUE
 
 [Rule.Common.USER_DEFINED.ACPITABLE]
   FILE FREEFORM = $(NAMED_GUID) {
-    RAW       ACPI                    |.acpi
-    RAW       ASL                     |.aml
+    RAW       ACPI  Optional          |.acpi
+    RAW       ASL   Optional          |.aml
     UI        STRING="$(MODULE_NAME)" Optional
   }
 

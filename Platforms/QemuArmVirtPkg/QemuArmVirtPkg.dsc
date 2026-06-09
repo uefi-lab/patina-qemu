@@ -1121,8 +1121,9 @@
   #
   # MdeModulePkg/Universal/Acpi/AcpiTableDxe/AcpiTableDxe.inf
   MdeModulePkg/Universal/Acpi/BootGraphicsResourceTableDxe/BootGraphicsResourceTableDxe.inf
-  # MdeModulePkg/Universal/Acpi/AcpiPlatformDxe/AcpiPlatformDxe.inf
+  MdeModulePkg/Universal/Acpi/AcpiPlatformDxe/AcpiPlatformDxe.inf
   QemuPkg/AcpiPlatformDxe/AcpiPlatformDxe.inf
+  QemuPkg/AcpiSdtDxe/AcpiSdtDxe.inf
 
   #
   # Standalone MM drivers in non-secure world
