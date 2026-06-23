@@ -89,7 +89,14 @@ class QemuRunner(uefi_helper_plugin.IUefiHelperPlugin):
             "--tpm2",
             "--log", "level=20",
         ]
-        return subprocess.Popen(cmd)
+        try:
+            return subprocess.Popen(cmd)
+        except FileNotFoundError as error:
+            raise FileNotFoundError(
+                "swtpm executable not found on PATH. Install it (e.g. "
+                "'sudo apt install swtpm' on Debian/Ubuntu, 'sudo dnf install "
+                "swtpm' on Fedora) or disable SWTPM by setting SWTPM_ENABLE=FALSE."
+            ) from error
 
     @staticmethod
     def StopSwTpm(swtpm_proc):
@@ -124,11 +131,16 @@ class QemuRunner(uefi_helper_plugin.IUefiHelperPlugin):
         qemu_executable_path = QemuRunner.GetStr(env, "QEMU_PATH")
         qemu_ext_dep_dir = QemuRunner.GetStr(env, "QEMU_DIR")
         serial_port = QemuRunner.GetStr(env, "SERIAL_PORT")
-        tpm_dev = QemuRunner.GetStr(env, "TPM_DEV")
+        sw_tpm_enable = QemuRunner.GetBool(env, "SWTPM_ENABLE", True)
         virtual_drive = QemuRunner.GetStr(env, "VIRTUAL_DRIVE_PATH")
 
         code_fd = os.path.join(output_path, "FV", "QEMUQ35_CODE.fd")
         var_store = os.path.join(output_path, "FV", "QEMUQ35_VARS.fd")
+
+        # SWTPM is only available on Linux builds, exclude Windows
+        if os.name == 'nt':
+            logging.warning("SWTPM is not available on Windows builds.")
+            sw_tpm_enable = False
 
         # Use a provided QEMU path. Otherwise use what is provided through the extdep
         if not qemu_executable_path:
@@ -169,7 +181,7 @@ class QemuRunner(uefi_helper_plugin.IUefiHelperPlugin):
             .with_virtual_drive(None if path_to_os else virtual_drive)
             .with_display(not headless)
             .with_network(forward_ports, use_virtio)
-            .with_tpm(tpm_dev)
+            .with_tpm(sw_tpm_enable, tpm_dir=output_path)
             .with_gdb_server(gdb_server_port)
             .with_serial_port(serial_port)
             .with_monitor_port(monitor_port)
@@ -191,9 +203,9 @@ class QemuRunner(uefi_helper_plugin.IUefiHelperPlugin):
         (executable, args) = qemu_cmd_builder.build()
 
         swtpm_proc = None
-        if tpm_dev:
-            tpm_sock = tpm_dev
-            tpm_dir = "/".join(tpm_sock.rsplit("/", 1)[:-1])
+        if sw_tpm_enable:
+            tpm_dir = env.GetValue("BUILD_OUTPUT_BASE")
+            tpm_sock = os.path.join(tpm_dir, "swtpm-sock")
             logging.info("Starting swtpm emulator.")
             swtpm_proc = QemuRunner.StartSwTpm(tpm_dir, tpm_sock)
 
